@@ -42,16 +42,18 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
             // Run nuget verify
             using (var processInvoker = HostContext.CreateService<IProcessInvoker>())
             {
+                // TODO: What if there are multiple signatures? E.g. - 1 or more registered from the user and 1 or more from the Agent.
+
                 int exitCode = await processInvoker.ExecuteAsync(workingDirectory: workingDirectory,
-                                                                 fileName: powerShellExe,
+                                                                 fileName: nugetPath,
                                                                  arguments: powerShellExeArgs,
                                                                  environment: Environment,
                                                                  requireExitCodeZero: false,
                                                                  outputEncoding: null,
                                                                  killProcessOnCancel: false,
                                                                  redirectStandardIn: null,
-                                                                 inheritConsoleHandler: !ExecutionContext.Variables.Retain_Default_Encoding,
-                                                                 cancellationToken: ExecutionContext.CancellationToken);
+                                                                 inheritConsoleHandler: false,
+                                                                 cancellationToken: null); // TODO: Is it OK to set to null?
 
                 if (exitCode != 0)
                 {
