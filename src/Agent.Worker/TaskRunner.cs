@@ -2,6 +2,7 @@ using Agent.Sdk;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.TeamFoundation.DistributedTask.Expressions;
@@ -13,6 +14,45 @@ using Microsoft.VisualStudio.Services.Agent.Worker.Container;
 
 namespace Microsoft.VisualStudio.Services.Agent.Worker
 {
+
+    [ServiceLocator(Default = typeof(SignatureService))]
+    public interface ISignatureService : IAgentService
+    {
+        Boolean Verify(Definition definition);
+    }
+
+    public class SignatureService : AgentService, ISignatureService
+    {
+
+        public Boolean Verify(Definition definition)
+        {
+            // Find NuGet
+            String nugetPath = WhichUtil.Which("nuget", require: true);
+
+            // Zip the task
+            String taskDirectory = definition.Directory;
+            String tempDirectory = Path.Combine(HostContext.GetDirectory(WellKnownDirectory.Temp), Guid.NewGuid().ToString());
+
+            // Zip the task
+            String taskZipPath = Path.Combine(tempDirectory, "task.zip");
+            ZipFile.CreateFromDirectory(definition.Directory, taskZipPath);
+
+            // Convert to nupkg
+            String nupkgPath = Path.Combine(tempDirectory, "task.nupkg");
+            File.Move(taskZipPath, nupkgPath);
+
+            // Run nuget verify
+            
+            
+
+            Directory.Delete(tempDirectory);
+
+            return false;
+        }
+
+    }
+
+
     public enum JobRunStage
     {
         PreJob,
@@ -65,6 +105,14 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
             // TODO: Add a try catch here to give a better error message.
             Definition definition = taskManager.Load(Task);
             ArgUtil.NotNull(definition, nameof(definition));
+
+            // Verify task signatures
+            Boolean shouldVerifyTaskSignatures = true;
+            if (shouldVerifyTaskSignatures)
+            {
+                ISignatureService signatureService = HostContext.CreateService<ISignatureService>();
+                signatureService.Verify();
+            }
 
             // Print out task metadata
             PrintTaskMetaData(definition);
