@@ -14,17 +14,15 @@ using Microsoft.VisualStudio.Services.Agent.Worker.Container;
 
 namespace Microsoft.VisualStudio.Services.Agent.Worker
 {
-
     [ServiceLocator(Default = typeof(SignatureService))]
     public interface ISignatureService : IAgentService
     {
-        Boolean Verify(Definition definition);
+        Task<Boolean> VerifyAsync(Definition definition);
     }
 
     public class SignatureService : AgentService, ISignatureService
     {
-
-        public Boolean Verify(Definition definition)
+        public async Task<Boolean> VerifyAsync(Definition definition)
         {
             // Find NuGet
             String nugetPath = WhichUtil.Which("nuget", require: true);
@@ -42,14 +40,30 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
             File.Move(taskZipPath, nupkgPath);
 
             // Run nuget verify
-            
-            
+            using (var processInvoker = HostContext.CreateService<IProcessInvoker>())
+            {
+                int exitCode = await processInvoker.ExecuteAsync(workingDirectory: workingDirectory,
+                                                                 fileName: powerShellExe,
+                                                                 arguments: powerShellExeArgs,
+                                                                 environment: Environment,
+                                                                 requireExitCodeZero: false,
+                                                                 outputEncoding: null,
+                                                                 killProcessOnCancel: false,
+                                                                 redirectStandardIn: null,
+                                                                 inheritConsoleHandler: !ExecutionContext.Variables.Retain_Default_Encoding,
+                                                                 cancellationToken: ExecutionContext.CancellationToken);
+
+                if (exitCode != 0)
+                {
+                    // TODO: Log something
+                    return false;
+                }
+            }
 
             Directory.Delete(tempDirectory);
 
-            return false;
+            return true;
         }
-
     }
 
 
@@ -111,7 +125,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
             if (shouldVerifyTaskSignatures)
             {
                 ISignatureService signatureService = HostContext.CreateService<ISignatureService>();
-                signatureService.Verify();
+                await signatureService.VerifyAsync();
             }
 
             // Print out task metadata
