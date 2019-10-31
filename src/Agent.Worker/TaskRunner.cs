@@ -28,8 +28,23 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
             // Find NuGet
             String nugetPath = WhichUtil.Which("nuget", require: true);
 
+
+
+
+
+            String taskZipPath = definition.ZipPath;
+
+            // rename to nupkg, verify, rename back
+            // TODO: If verify successful, we will have to extract
+
+
+
+
+
             String arguments = "verify -Signatures \"E:\\TaskSigningTests\\FROM-Manual\\UseNodeV1-successfullyverified.nupkg\" -CertificateFingerprint  F25A1708C41B49011641458B2108F230F0B968484E329ED6018BD5E8A279AABD -Verbosity Detailed";
             String workingDirectory = "C:\\";
+            
+            
             // // Zip the task
             // String taskDirectory = definition.Directory;
             // String tempDirectory = Path.Combine(HostContext.GetDirectory(WellKnownDirectory.Temp), Guid.NewGuid().ToString());
@@ -131,6 +146,8 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
             Boolean verificationSuccessful = false;
             if (shouldVerifyTaskSignatures)
             {
+                ExecutionContext.Output(definition.Directory);
+                ExecutionContext.Output(definition.ZipPath);
                 ISignatureService signatureService = HostContext.CreateService<ISignatureService>();
                 verificationSuccessful =  await signatureService.VerifyAsync(definition);
             }
@@ -141,7 +158,9 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
             }
             else 
             {
-                ExecutionContext.Output("Task signature verification failed.");
+                //ExecutionContext.Output("Task signature verification failed.");
+                //throw new Exception(StringUtil.Loc("SupportedTaskHandlerNotFoundLinux"));
+                throw new Exception("Task signature verification failed.");
             }
 
             // Print out task metadata

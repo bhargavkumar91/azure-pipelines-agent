@@ -92,7 +92,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
             }
 
             // Initialize the definition wrapper object.
-            var definition = new Definition() { Directory = GetDirectory(task.Reference) };
+            var definition = new Definition() { Directory = GetDirectory(task.Reference), ZipPath = GetTaskZipPath(task.Reference) };
 
             // Deserialize the JSON.
             string file = Path.Combine(definition.Directory, Constants.Path.TaskJsonFile);
@@ -206,6 +206,17 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                 }
 
                 Directory.CreateDirectory(destDirectory);
+
+                // TODO: If we are doing signature validation, dont extract zip to directory. Do this later.
+                // TODO: make this a shared string
+                String destZipPath = Path.Combine(HostContext.GetDirectory(WellKnownDirectory.TaskZips), $"{task.Name}_{task.Id}_{task.Version}.zip");
+                // TODO: Wrap in if
+                // copy zipFile to destZipPath
+                File.Copy(zipFile, destZipPath);
+                Trace.Info($"Copuing from {zipFile} to {destZipPath}");
+
+
+
                 ZipFile.ExtractToDirectory(zipFile, destDirectory);
 
                 Trace.Verbose("Create watermark file indicate task download succeed.");
@@ -244,12 +255,23 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                 $"{task.Name}_{task.Id}",
                 task.Version);
         }
+
+        private string GetTaskZipPath(Pipelines.TaskStepDefinitionReference task)
+        {
+            ArgUtil.NotEmpty(task.Id, nameof(task.Id));
+            ArgUtil.NotNull(task.Name, nameof(task.Name));
+            ArgUtil.NotNullOrEmpty(task.Version, nameof(task.Version));
+            return Path.Combine(
+                HostContext.GetDirectory(WellKnownDirectory.TaskZips),
+                $"{task.Name}_{task.Id}_{task.Version}.zip"); // TODO: Move to shared string.
+        }
     }
 
     public sealed class Definition
     {
         public DefinitionData Data { get; set; }
         public string Directory { get; set; }
+        public string ZipPath {get;set;}
     }
 
     public sealed class DefinitionData
