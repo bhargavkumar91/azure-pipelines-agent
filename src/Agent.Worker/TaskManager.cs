@@ -120,10 +120,11 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
             // first check to see if we already have the task
             string destDirectory = GetDirectory(task);
             Trace.Info($"Ensuring task exists: ID '{task.Id}', version '{task.Version}', name '{task.Name}', directory '{destDirectory}'.");
-            if (File.Exists(destDirectory + ".completed"))
+            Boolean signingEnabled = true;
+            if (File.Exists(destDirectory + ".completed") && !signingEnabled)
             {
                 executionContext.Debug($"Task '{task.Name}' already downloaded at '{destDirectory}'.");
-                return;
+                return; // TODO: Don't do this if we are using signing.
             }
 
             // delete existing task folder.
