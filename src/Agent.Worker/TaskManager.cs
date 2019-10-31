@@ -210,13 +210,21 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
 
                 // TODO: If we are doing signature validation, dont extract zip to directory. Do this later.
                 // TODO: make this a shared string
+                String tasksZipDirectory = HostContext.GetDirectory(WellKnownDirectory.TaskZips);
+
+                // I think we need this, should move to where we create folders
+                if (!Directory.Exists(tasksZipDirectory))
+                {
+                    Directory.CreateDirectory(tasksZipDirectory);
+                }
+
                 String destZipPath = Path.Combine(HostContext.GetDirectory(WellKnownDirectory.TaskZips), $"{task.Name}_{task.Id}_{task.Version}.zip");
                 // TODO: Wrap in if
                 // copy zipFile to destZipPath
+                Trace.Info($"Copying from {zipFile} to {destZipPath}");
                 File.Copy(zipFile, destZipPath);
-                Trace.Info($"Copuing from {zipFile} to {destZipPath}");
 
-
+                // TODO: Need to skip verification for checkout task, it's in Agent.
 
                 ZipFile.ExtractToDirectory(zipFile, destDirectory);
 
