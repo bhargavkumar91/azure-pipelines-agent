@@ -127,13 +127,14 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                 return; // TODO: Don't do this if we are using signing. Or we can check also if zip exists
             }
 
-
             String taskZipPath = Path.Combine(HostContext.GetDirectory(WellKnownDirectory.TaskZips), $"{task.Name}_{task.Id}_{task.Version}.zip"); // TODO: Use shared code to create this string.
             if (signingEnabled && File.Exists(taskZipPath))
             {
                 executionContext.Debug($"Task '{task.Name}' already downloaded at '{taskZipPath}'.");
                 return;
             }
+
+            executionContext.Debug("Past checks for existing file.");
 
             // delete existing task folder.
             Trace.Verbose("Deleting task destination folder: {0}", destDirectory);
