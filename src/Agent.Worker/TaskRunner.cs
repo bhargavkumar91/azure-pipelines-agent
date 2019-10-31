@@ -5,6 +5,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Threading;
 using Microsoft.TeamFoundation.DistributedTask.Expressions;
 using Microsoft.TeamFoundation.DistributedTask.WebApi;
 using Pipelines = Microsoft.TeamFoundation.DistributedTask.Pipelines;
@@ -27,17 +28,19 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
             // Find NuGet
             String nugetPath = WhichUtil.Which("nuget", require: true);
 
-            // Zip the task
-            String taskDirectory = definition.Directory;
-            String tempDirectory = Path.Combine(HostContext.GetDirectory(WellKnownDirectory.Temp), Guid.NewGuid().ToString());
+            String arguments = "verify -Signatures \"E:\\TaskSigningTests\\FROM-Manual\\UseNodeV1-successfullyverified.nupkg\" -CertificateFingerprint  F25A1708C41B49011641458B2108F230F0B968484E329ED6018BD5E8A279AABD -Verbosity Detailed";
+            String workingDirectory = "C:\\";
+            // // Zip the task
+            // String taskDirectory = definition.Directory;
+            // String tempDirectory = Path.Combine(HostContext.GetDirectory(WellKnownDirectory.Temp), Guid.NewGuid().ToString());
 
-            // Zip the task
-            String taskZipPath = Path.Combine(tempDirectory, "task.zip");
-            ZipFile.CreateFromDirectory(definition.Directory, taskZipPath);
+            // // Zip the task
+            // String taskZipPath = Path.Combine(tempDirectory, "task.zip");
+            // ZipFile.CreateFromDirectory(definition.Directory, taskZipPath);
 
-            // Convert to nupkg
-            String nupkgPath = Path.Combine(tempDirectory, "task.nupkg");
-            File.Move(taskZipPath, nupkgPath);
+            // // Convert to nupkg
+            // String nupkgPath = Path.Combine(tempDirectory, "task.nupkg");
+            // File.Move(taskZipPath, nupkgPath);
 
             // Run nuget verify
             using (var processInvoker = HostContext.CreateService<IProcessInvoker>())
@@ -46,14 +49,12 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
 
                 int exitCode = await processInvoker.ExecuteAsync(workingDirectory: workingDirectory,
                                                                  fileName: nugetPath,
-                                                                 arguments: powerShellExeArgs,
-                                                                 environment: Environment,
+                                                                 arguments: arguments,
+                                                                 environment: null,
                                                                  requireExitCodeZero: false,
                                                                  outputEncoding: null,
                                                                  killProcessOnCancel: false,
-                                                                 redirectStandardIn: null,
-                                                                 inheritConsoleHandler: false,
-                                                                 cancellationToken: null); // TODO: Is it OK to set to null?
+                                                                 cancellationToken: default(CancellationToken)); // TODO: Is it OK to set to null?
 
                 if (exitCode != 0)
                 {
@@ -62,7 +63,10 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                 }
             }
 
-            Directory.Delete(tempDirectory);
+            //Directory.Delete(tempDirectory);
+            // TODO: Log that we successfully verified the task
+            // TODO: Add logging
+            // TODO: Need to save zips and not extract on initial download
 
             return true;
         }
@@ -124,10 +128,20 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
 
             // Verify task signatures
             Boolean shouldVerifyTaskSignatures = true;
+            Boolean verificationSuccessful = false;
             if (shouldVerifyTaskSignatures)
             {
                 ISignatureService signatureService = HostContext.CreateService<ISignatureService>();
-                await signatureService.VerifyAsync();
+                verificationSuccessful =  await signatureService.VerifyAsync(definition);
+            }
+
+            if (verificationSuccessful) 
+            {
+                ExecutionContext.Output("Task signature verification successful.");
+            }
+            else 
+            {
+                ExecutionContext.Output("Task signature verification failed.");
             }
 
             // Print out task metadata
