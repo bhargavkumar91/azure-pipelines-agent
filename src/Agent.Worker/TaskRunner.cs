@@ -74,6 +74,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
 
                 if (exitCode != 0)
                 {
+                    File.Move(taskNugetPath, taskZipPath);
                     // TODO: Log something
                     return false;
                 }
