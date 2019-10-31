@@ -25,6 +25,12 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
     {
         public async Task<Boolean> VerifyAsync(Definition definition)
         {
+            // TODO: I think its empty for checkout. Solve this in another way. Din't call verify for checkout? Check data shape before calling this.
+            if (String.IsNullOrEmpty(definition.ZipPath))
+            {
+                return true;
+            }
+
             // Find NuGet
             String nugetPath = WhichUtil.Which("nuget", require: true);
             String fingerprint = "F25A1708C41B49011641458B2108F230F0B968484E329ED6018BD5E8A279AABD";
@@ -147,6 +153,9 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
             {
                 ExecutionContext.Output(definition.Directory);
                 ExecutionContext.Output(definition.ZipPath);
+
+                ExecutionContext.Output(Newtonsoft.Json.JsonConvert.SerializeObject(definition));
+
                 ISignatureService signatureService = HostContext.CreateService<ISignatureService>();
                 verificationSuccessful =  await signatureService.VerifyAsync(definition);
             }
