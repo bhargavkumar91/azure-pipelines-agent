@@ -27,21 +27,16 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
         {
             // Find NuGet
             String nugetPath = WhichUtil.Which("nuget", require: true);
-
-
-
-
-
+            String fingerprint = "F25A1708C41B49011641458B2108F230F0B968484E329ED6018BD5E8A279AABD";
             String taskZipPath = definition.ZipPath;
+            String taskNugetPath = definition.ZipPath.Replace(".zip", ".nupkg");
 
-            // rename to nupkg, verify, rename back
-            // TODO: If verify successful, we will have to extract
+            // Rename .zip to .nupkg
+            File.Move(taskZipPath, taskNugetPath);
 
+            // TODO: If verify successful, we will have to extract. Make sure to first delete destination folder.
 
-
-
-
-            String arguments = "verify -Signatures \"E:\\TaskSigningTests\\FROM-Manual\\UseNodeV1-successfullyverified.nupkg\" -CertificateFingerprint  F25A1708C41B49011641458B2108F230F0B968484E329ED6018BD5E8A279AABD -Verbosity Detailed";
+            String arguments = $"verify -Signatures \"{taskNugetPath}\" -CertificateFingerprint {fingerprint} -Verbosity Detailed";
             String workingDirectory = "C:\\";
             
             
@@ -82,6 +77,10 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
             // TODO: Log that we successfully verified the task
             // TODO: Add logging
             // TODO: Need to save zips and not extract on initial download
+
+
+            // Rename .nupkg back to .zip
+            File.Move(taskNugetPath, taskZipPath);
 
             return true;
         }

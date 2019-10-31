@@ -124,7 +124,15 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
             if (File.Exists(destDirectory + ".completed") && !signingEnabled)
             {
                 executionContext.Debug($"Task '{task.Name}' already downloaded at '{destDirectory}'.");
-                return; // TODO: Don't do this if we are using signing.
+                return; // TODO: Don't do this if we are using signing. Or we can check also if zip exists
+            }
+
+
+            String taskZipPath = Path.Combine(HostContext.GetDirectory(WellKnownDirectory.TaskZips), $"{task.Name}_{task.Id}_{task.Version}.zip"); // TODO: Use shared code to create this string.
+            if (signingEnabled && File.Exists(taskZipPath))
+            {
+                executionContext.Debug($"Task '{task.Name}' already downloaded at '{taskZipPath}'.");
+                return;
             }
 
             // delete existing task folder.
@@ -217,12 +225,11 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                 {
                     Directory.CreateDirectory(tasksZipDirectory);
                 }
-
-                String destZipPath = Path.Combine(HostContext.GetDirectory(WellKnownDirectory.TaskZips), $"{task.Name}_{task.Id}_{task.Version}.zip");
+                
                 // TODO: Wrap in if
                 // copy zipFile to destZipPath
-                Trace.Info($"Copying from {zipFile} to {destZipPath}");
-                File.Copy(zipFile, destZipPath);
+                Trace.Info($"Copying from {zipFile} to {taskZipPath}");
+                File.Copy(zipFile, taskZipPath);
 
                 // TODO: Need to skip verification for checkout task, it's in Agent.
 
