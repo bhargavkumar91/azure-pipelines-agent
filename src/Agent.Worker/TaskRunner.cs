@@ -33,7 +33,15 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
 
             // Find NuGet
             String nugetPath = WhichUtil.Which("nuget", require: true);
-            String fingerprint = "F25A1708C41B49011641458B2108F230F0B968484E329ED6018BD5E8A279AABD";
+
+            var configurationStore = HostContext.GetService<IConfigurationStore>();
+            AgentSettings settings = configurationStore.GetSettings();
+            String fingerprint = settings.Fingerprints; // TODO: In other places check if this exists and that tells us if we need to verify or not.
+
+            //String fingerprint = "2389B9BF6F1FC00A963465F022A15887D44AA8CD0E2C2B49E039122CBA3B5EA4"; // TODO: Load from Agent config. Add global check if it exists
+
+
+            // Which means we should verify signatures.
             String taskZipPath = definition.ZipPath;
             String taskNugetPath = definition.ZipPath.Replace(".zip", ".nupkg");
 
