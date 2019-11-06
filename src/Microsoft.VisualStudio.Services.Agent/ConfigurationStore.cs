@@ -25,7 +25,7 @@ namespace Microsoft.VisualStudio.Services.Agent
         public bool IsHosted => !string.IsNullOrEmpty(NotificationPipeName) || !string.IsNullOrEmpty(NotificationSocketAddress);
 
         [DataMember(EmitDefaultValue = false)]
-        public string Fingerprints { get; set; }
+        public string Fingerprints { get; set; } // TODO: Make this array of strings?
 
         [DataMember(EmitDefaultValue = false)]
         public string NotificationPipeName { get; set; }
