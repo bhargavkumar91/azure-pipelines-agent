@@ -20,7 +20,11 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
 
         Definition Load(Pipelines.TaskStep task);
 
-        // Extract a task that has already been downloaded.
+        /// <summary>
+        /// Extract a task that has already been downloaded.
+        /// </summary>
+        /// <param name="executionContext">Current execution context.</param>
+        /// <param name="task">The task to be extracted.</param>
         void Extract(IExecutionContext executionContext, Pipelines.TaskStep task);
     }
 
