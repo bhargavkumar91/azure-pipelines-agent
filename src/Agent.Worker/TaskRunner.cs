@@ -143,6 +143,9 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
 
                     ExecutionContext.Debug("Extracting task {} from {} to {}.");
                     // TODO: If verify successful, we will have to extract. Make sure to first delete destination folder.
+
+                    // Trace.Verbose("Deleting task destination folder: {0}", destDirectory);
+                    // IOUtil.DeleteDirectory(destDirectory, CancellationToken.None);
                 }
                 else 
                 {

@@ -138,8 +138,6 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                 return;
             }
 
-            executionContext.Debug("Past checks for existing file.");
-
             // delete existing task folder.
             Trace.Verbose("Deleting task destination folder: {0}", destDirectory);
             IOUtil.DeleteDirectory(destDirectory, CancellationToken.None);
