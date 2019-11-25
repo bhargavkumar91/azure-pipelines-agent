@@ -141,7 +141,12 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                 if (verificationSuccessful) 
                 {
                     ExecutionContext.Output("Task signature verification successful.");
-                    taskManager.Extract(ExecutionContext, Task);
+
+                    // Only extract if it's not the checkout task.
+                    if (!String.IsNullOrEmpty(definition.ZipPath))
+                    {
+                        taskManager.Extract(ExecutionContext, Task);
+                    }
                 }
                 else 
                 {
