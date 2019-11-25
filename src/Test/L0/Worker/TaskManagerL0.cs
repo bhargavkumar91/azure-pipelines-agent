@@ -401,6 +401,9 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests.Worker
             }
         }
 
+        // TODO: Add test for Extract
+        
+
         [Fact]
         [Trait("Level", "L0")]
         [Trait("Category", "Worker")]
