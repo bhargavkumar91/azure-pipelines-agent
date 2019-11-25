@@ -402,7 +402,34 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests.Worker
         }
 
         // TODO: Add test for Extract
-        
+        [Fact]
+        [Trait("Level", "L0")]
+        [Trait("Category", "Worker")]
+        public void ExtractsAnAlreadyDownloadedZipToTheCorrectLocation()
+        {
+            try 
+            {
+                // Arrange
+                var bingGuid = Guid.NewGuid();
+                string bingTaskName = "Bing";
+                string bingVersion = "1.21.2";
+
+
+                // Act
+                _taskManager.Extract();
+
+                // Assert
+                string destDirectory = Path.Combine(
+                    _hc.GetDirectory(WellKnownDirectory.Tasks),
+                    $"{bingTaskName}_{bingGuid}",
+                    bingVersion);
+                Assert.True(File.Exists(Path.Combine(destDirectory, Constants.Path.TaskJsonFile)));
+            }
+            finally
+            {
+                Teardown();
+            }
+        }
 
         [Fact]
         [Trait("Level", "L0")]
