@@ -217,8 +217,6 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                     }
                 }
 
-                Directory.CreateDirectory(destDirectory);
-
                 // Only extract the zip if we are not doing signature verification.
                 // If we are doing signature verification, we will extract the zip at task run time.
                 if (signingEnabled)
@@ -231,14 +229,13 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                 }
                 else 
                 {
+                    Directory.CreateDirectory(destDirectory);
                     ZipFile.ExtractToDirectory(zipFile, destDirectory);
+                    Trace.Verbose("Create watermark file indicate task download succeed.");
+                    File.WriteAllText(destDirectory + ".completed", DateTime.UtcNow.ToString());
                 }
 
-                // TODO: Combine some lines below with if/else above. Including creating the dest directory?
-                Trace.Verbose("Create watermark file indicate task download succeed.");
-                File.WriteAllText(destDirectory + ".completed", DateTime.UtcNow.ToString());
-
-                executionContext.Debug($"Task '{task.Name}' has been downloaded into '{destDirectory}'.");
+                executionContext.Debug($"Task '{task.Name}' has been downloaded into '{(signingEnabled ? taskZipPath : destDirectory)}'.");
                 Trace.Info("Finished getting task.");
             }
             finally

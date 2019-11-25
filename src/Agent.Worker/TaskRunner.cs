@@ -146,6 +146,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
 
                     // Trace.Verbose("Deleting task destination folder: {0}", destDirectory);
                     // IOUtil.DeleteDirectory(destDirectory, CancellationToken.None);
+                    // File.WriteAllText(destDirectory + ".completed", DateTime.UtcNow.ToString()); // Need to write this so we know next time not to download
                 }
                 else 
                 {
