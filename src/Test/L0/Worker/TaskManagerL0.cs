@@ -413,10 +413,17 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests.Worker
                 var bingGuid = Guid.NewGuid();
                 string bingTaskName = "Bing";
                 string bingVersion = "1.21.2";
-
+                var taskStep = new Pipelines.TaskStep();
+                string zipDestDirectory = Path.Combine(_hc.GetDirectory(WellKnownDirectory.TaskZips), $"{bingTaskName}_{bingGuid}_{bingVersion}.zip");
+                // write stream to file
+                Stream zipStream = GetZipStream();
+                using (var fileStream = new FileStream(zipDestDirectory, FileMode.Create, FileAccess.Write))
+                {
+                    zipStream.CopyTo(fileStream);
+                }
 
                 // Act
-                _taskManager.Extract();
+                _taskManager.Extract(_ec.Object, taskStep);
 
                 // Assert
                 string destDirectory = Path.Combine(
