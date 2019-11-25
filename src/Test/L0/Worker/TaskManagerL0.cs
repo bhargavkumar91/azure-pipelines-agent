@@ -410,6 +410,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests.Worker
             try 
             {
                 // Arrange
+                Setup(signatureVerificationEnabled: true);
                 var bingGuid = Guid.NewGuid();
                 string bingTaskName = "Bing";
                 string bingVersion = "1.21.2";
