@@ -334,6 +334,77 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests.Worker
         [Fact]
         [Trait("Level", "L0")]
         [Trait("Category", "Worker")]
+        public async void PreservesTaskZipAndDoesntExtractTaskWhenInSignatureVerificationMode()
+        {
+            try
+            {
+                // TODO: Setup that the fingerprint exists.
+
+                //Arrange
+                Setup();
+                var bingGuid = Guid.NewGuid();
+                string bingTaskName = "Bing";
+                string bingVersion = "1.21.2";
+                var tasks = new List<Pipelines.TaskStep>
+                {
+                    new Pipelines.TaskStep()
+                    {
+                        Enabled = true,
+                        Reference = new Pipelines.TaskStepDefinitionReference()
+                        {
+                            Name = bingTaskName,
+                            Version = bingVersion,
+                            Id = bingGuid
+                        }
+                    },
+                    new Pipelines.TaskStep()
+                    {
+                        Enabled = true,
+                        Reference = new Pipelines.TaskStepDefinitionReference()
+                        {
+                            Name = bingTaskName,
+                            Version = bingVersion,
+                            Id = bingGuid
+                        }
+                    }
+                };
+                _taskServer
+                    .Setup(x => x.GetTaskContentZipAsync(
+                        bingGuid,
+                        It.Is<TaskVersion>(y => string.Equals(y.ToString(), bingVersion, StringComparison.Ordinal)),
+                        It.IsAny<CancellationToken>()))
+                    .Returns(Task.FromResult<Stream>(GetZipStream()));
+
+                //Act
+                //first invocation will download and unzip the task from mocked IJobServer
+                await _taskManager.DownloadAsync(_ec.Object, tasks);
+                //second and third invocations should find the task in the cache and do nothing
+                await _taskManager.DownloadAsync(_ec.Object, tasks);
+                await _taskManager.DownloadAsync(_ec.Object, tasks);
+
+                //Assert
+                //see if the task.json was downloaded
+                string destDirectory = Path.Combine(
+                    _hc.GetDirectory(WellKnownDirectory.Tasks),
+                    $"{bingTaskName}_{bingGuid}",
+                    bingVersion);
+                // task.json shouldnt exist since we don't extract task contents when in signing mode
+                Assert.False(File.Exists(Path.Combine(destDirectory, Constants.Path.TaskJsonFile)));
+                // the zip for the task should exist on disk
+                Assert.True(File.Exists());
+                //assert download has happened only once, because disabled, duplicate and cached tasks are not downloaded
+                _taskServer
+                    .Verify(x => x.GetTaskContentZipAsync(It.IsAny<Guid>(), It.IsAny<TaskVersion>(), It.IsAny<CancellationToken>()), Times.Once());
+            }
+            finally
+            {
+                Teardown();
+            }
+        }
+
+        [Fact]
+        [Trait("Level", "L0")]
+        [Trait("Category", "Worker")]
         public void DoesNotMatchPlatform()
         {
             try
