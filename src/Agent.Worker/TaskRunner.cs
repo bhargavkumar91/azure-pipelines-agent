@@ -25,7 +25,8 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
     {
         public async Task<Boolean> VerifyAsync(Definition definition)
         {
-            // TODO: I think its empty for checkout. Solve this in another way. Don't call verify for checkout? Check data shape before changing this.
+            // This is used for the Checkout task.
+            // We can consider it verified since it's embedded in the Agent code.
             if (String.IsNullOrEmpty(definition.ZipPath))
             {
                 return true;
