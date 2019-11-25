@@ -163,10 +163,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
 
                 // We need to extract the zip now because the task.json metadata for the task is used in JobExtension.InitializeJob.
                 // This is fine because we overwrite the contents at task run time.
-                if (Directory.Exists(destDirectory))
-                {
-                    Directory.Delete(destDirectory);
-                }
+                IOUtil.DeleteDirectory(destDirectory, CancellationToken.None);
                 ZipFile.ExtractToDirectory(taskZipPath, destDirectory);
 
                 return;
@@ -263,10 +260,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
 
                     // We need to extract the zip now because the task.json metadata for the task is used in JobExtension.InitializeJob.
                     // This is fine because we overwrite the contents at task run time.
-                    if (Directory.Exists(destDirectory))
-                    {
-                        Directory.Delete(destDirectory);
-                    }
+                    IOUtil.DeleteDirectory(destDirectory, CancellationToken.None);
                     ZipFile.ExtractToDirectory(zipFile, destDirectory);
                 }
                 else 
