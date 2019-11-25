@@ -121,7 +121,6 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
             
             IOUtil.DeleteDirectory(destinationDirectory, CancellationToken.None);
 
-            // Trace.Verbose("Deleting task destination folder: {0}", destDirectory);
             Trace.Verbose("Deleting task destination folder: {0}", destinationDirectory);
             IOUtil.DeleteDirectory(destinationDirectory, CancellationToken.None);
 
