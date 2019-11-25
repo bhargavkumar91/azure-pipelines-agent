@@ -25,7 +25,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
     {
         public async Task<Boolean> VerifyAsync(Definition definition)
         {
-            // TODO: I think its empty for checkout. Solve this in another way. Don't call verify for checkout? Check data shape before calling this.
+            // TODO: I think its empty for checkout. Solve this in another way. Don't call verify for checkout? Check data shape before changing this.
             if (String.IsNullOrEmpty(definition.ZipPath))
             {
                 return true;
@@ -45,12 +45,11 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
             File.Move(taskZipPath, taskNugetPath);
 
             String arguments = $"verify -Signatures \"{taskNugetPath}\" -CertificateFingerprint {fingerprint} -Verbosity Detailed";
-            String workingDirectory = "C:\\"; // TODO: Set this to agent root path?
 
             // Run nuget verify
             using (var processInvoker = HostContext.CreateService<IProcessInvoker>())
             {
-                int exitCode = await processInvoker.ExecuteAsync(workingDirectory: workingDirectory,
+                int exitCode = await processInvoker.ExecuteAsync(workingDirectory: HostContext.GetDirectory(WellKnownDirectory.Root),
                                                                  fileName: nugetPath,
                                                                  arguments: arguments,
                                                                  environment: null,
