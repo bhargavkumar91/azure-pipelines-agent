@@ -141,13 +141,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                 if (verificationSuccessful) 
                 {
                     ExecutionContext.Output("Task signature verification successful.");
-
-                    ExecutionContext.Debug("Extracting task {} from {} to {}.");
-                    // TODO: If verify successful, we will have to extract. Make sure to first delete destination folder.
-
-                    // Trace.Verbose("Deleting task destination folder: {0}", destDirectory);
-                    // IOUtil.DeleteDirectory(destDirectory, CancellationToken.None);
-                    // File.WriteAllText(destDirectory + ".completed", DateTime.UtcNow.ToString()); // Need to write this so we know next time not to download
+                    await taskManager.ExtractAsync(ExecutionContext, definition);
                 }
                 else 
                 {
