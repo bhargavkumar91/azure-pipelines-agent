@@ -334,7 +334,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests.Worker
         [Fact]
         [Trait("Level", "L0")]
         [Trait("Category", "Worker")]
-        public async void PreservesTaskZipAndDoesntExtractTaskWhenInSignatureVerificationMode()
+        public async void PreservesTaskZipTaskWhenInSignatureVerificationMode()
         {
             try
             {
@@ -387,8 +387,8 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests.Worker
                     $"{bingTaskName}_{bingGuid}",
                     bingVersion);
                 string zipDestDirectory = Path.Combine(_hc.GetDirectory(WellKnownDirectory.TaskZips), $"{bingTaskName}_{bingGuid}_{bingVersion}.zip");
-                // task.json shouldnt exist since we don't extract task contents when in signing mode
-                Assert.False(File.Exists(Path.Combine(destDirectory, Constants.Path.TaskJsonFile)));
+                // task.json should exist since we need it for JobExtension.InitializeJob
+                Assert.True(File.Exists(Path.Combine(destDirectory, Constants.Path.TaskJsonFile)));
                 // the zip for the task should exist on disk
                 Assert.True(File.Exists(zipDestDirectory));
                 //assert download has happened only once, because disabled, duplicate and cached tasks are not downloaded
