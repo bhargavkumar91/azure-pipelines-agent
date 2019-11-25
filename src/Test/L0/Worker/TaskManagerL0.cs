@@ -388,10 +388,11 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests.Worker
                     _hc.GetDirectory(WellKnownDirectory.Tasks),
                     $"{bingTaskName}_{bingGuid}",
                     bingVersion);
+                string zipDestDirectory = Path.Combine(_hc.GetDirectory(WellKnownDirectory.TaskZips), $"{bingTaskName}_{bingGuid}_{bingVersion}.zip");
                 // task.json shouldnt exist since we don't extract task contents when in signing mode
                 Assert.False(File.Exists(Path.Combine(destDirectory, Constants.Path.TaskJsonFile)));
                 // the zip for the task should exist on disk
-                Assert.True(File.Exists());
+                Assert.True(File.Exists(zipDestDirectory));
                 //assert download has happened only once, because disabled, duplicate and cached tasks are not downloaded
                 _taskServer
                     .Verify(x => x.GetTaskContentZipAsync(It.IsAny<Guid>(), It.IsAny<TaskVersion>(), It.IsAny<CancellationToken>()), Times.Once());
