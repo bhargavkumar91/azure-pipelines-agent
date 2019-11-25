@@ -141,7 +141,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                 if (verificationSuccessful) 
                 {
                     ExecutionContext.Output("Task signature verification successful.");
-                    await taskManager.ExtractAsync(ExecutionContext, definition);
+                    taskManager.Extract(ExecutionContext, Task);
                 }
                 else 
                 {

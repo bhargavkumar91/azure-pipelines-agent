@@ -21,7 +21,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
         Definition Load(Pipelines.TaskStep task);
 
         // Extract a task that has already been downloaded.
-        Task ExtractAsync(IExecutionContext executionContext, Definition definition);
+        void Extract(IExecutionContext executionContext, Pipelines.TaskStep task);
     }
 
     public sealed class TaskManager : AgentService, ITaskManager
@@ -112,17 +112,23 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
             return definition;
         }
 
-        public async Task ExtractAsync(IExecutionContext executionContext, Definition definition)
+        public void Extract(IExecutionContext executionContext, Pipelines.TaskStep task)
         {
-            executionContext.Debug("Extracting task {} from {} to {}."); // TODO: Log in TaskManager
+            String zipFile = GetTaskZipPath(task.Reference);
+            String destinationDirectory = GetDirectory(task.Reference);
+            
+            executionContext.Debug($"Extracting task {task.Name} from {zipFile} to {destinationDirectory}.");
+            
+            IOUtil.DeleteDirectory(destinationDirectory, CancellationToken.None);
 
-            // TODO: If verify successful, we will have to extract. Make sure to first delete destination folder.
-
-            // string destDirectory = GetDirectory(task);
-            // 
             // Trace.Verbose("Deleting task destination folder: {0}", destDirectory);
-            // IOUtil.DeleteDirectory(destDirectory, CancellationToken.None);
-            // File.WriteAllText(destDirectory + ".completed", DateTime.UtcNow.ToString()); // Need to write this so we know next time not to download
+            Trace.Verbose("Deleting task destination folder: {0}", destinationDirectory);
+            IOUtil.DeleteDirectory(destinationDirectory, CancellationToken.None);
+
+            Directory.CreateDirectory(destinationDirectory);
+            ZipFile.ExtractToDirectory(zipFile, destinationDirectory);
+            Trace.Verbose("Creating watermark file to indicate the task extracted successfully.");
+            File.WriteAllText(destinationDirectory + ".completed", DateTime.UtcNow.ToString());
         }
 
         private async Task DownloadAsync(IExecutionContext executionContext, Pipelines.TaskStepDefinitionReference task)
