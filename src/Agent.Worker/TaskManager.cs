@@ -160,6 +160,15 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
             if (signingEnabled && File.Exists(taskZipPath))
             {
                 executionContext.Debug($"Task '{task.Name}' already downloaded at '{taskZipPath}'.");
+
+                // We need to extract the zip now because the task.json metadata for the task is used in JobExtension.InitializeJob.
+                // This is fine because we overwrite the contents at task run time.
+                if (Directory.Exists(destDirectory))
+                {
+                    Directory.Delete(destDirectory);
+                }
+                ZipFile.ExtractToDirectory(taskZipPath, destDirectory);
+
                 return;
             }
 
@@ -251,6 +260,14 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                     // Copy downloaded zip to the cache on disk for future extraction.
                     executionContext.Debug($"Copying from {zipFile} to {taskZipPath}");
                     File.Copy(zipFile, taskZipPath);
+
+                    // We need to extract the zip now because the task.json metadata for the task is used in JobExtension.InitializeJob.
+                    // This is fine because we overwrite the contents at task run time.
+                    if (Directory.Exists(destDirectory))
+                    {
+                        Directory.Delete(destDirectory);
+                    }
+                    ZipFile.ExtractToDirectory(zipFile, destDirectory);
                 }
                 else 
                 {
