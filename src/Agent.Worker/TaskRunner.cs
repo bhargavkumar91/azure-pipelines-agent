@@ -44,8 +44,6 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
             // Rename .zip to .nupkg
             File.Move(taskZipPath, taskNugetPath);
 
-            // TODO: If verify successful, we will have to extract. Make sure to first delete destination folder.
-
             String arguments = $"verify -Signatures \"{taskNugetPath}\" -CertificateFingerprint {fingerprint} -Verbosity Detailed";
             String workingDirectory = "C:\\"; // TODO: Set this to agent root path?
 
@@ -143,6 +141,9 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                 if (verificationSuccessful) 
                 {
                     ExecutionContext.Output("Task signature verification successful.");
+
+                    ExecutionContext.Debug("Extracting task {} from {} to {}.");
+                    // TODO: If verify successful, we will have to extract. Make sure to first delete destination folder.
                 }
                 else 
                 {

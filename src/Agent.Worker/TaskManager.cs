@@ -120,7 +120,11 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
             // first check to see if we already have the task
             string destDirectory = GetDirectory(task);
             Trace.Info($"Ensuring task exists: ID '{task.Id}', version '{task.Version}', name '{task.Name}', directory '{destDirectory}'.");
-            Boolean signingEnabled = true;
+
+            var configurationStore = HostContext.GetService<IConfigurationStore>();
+            AgentSettings settings = configurationStore.GetSettings();
+            Boolean signingEnabled = !String.IsNullOrEmpty(settings.Fingerprint);
+
             if (File.Exists(destDirectory + ".completed") && !signingEnabled)
             {
                 executionContext.Debug($"Task '{task.Name}' already downloaded at '{destDirectory}'.");
@@ -227,12 +231,12 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                     Directory.CreateDirectory(tasksZipDirectory);
                 }
                 
-                // TODO: Wrap in if
-                // copy zipFile to destZipPath
-                Trace.Info($"Copying from {zipFile} to {taskZipPath}");
-                File.Copy(zipFile, taskZipPath);
-
-                // TODO: Need to skip verification for checkout task, it's in Agent.
+                if (signingEnabled)
+                {
+                    // Copy downloaded zip to the cache on disk for future extraction.
+                    executionContext.Debug($"Copying from {zipFile} to {taskZipPath}");
+                    File.Copy(zipFile, taskZipPath);
+                }
 
                 ZipFile.ExtractToDirectory(zipFile, destDirectory);
 
