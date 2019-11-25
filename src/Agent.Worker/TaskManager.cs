@@ -219,25 +219,22 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
 
                 Directory.CreateDirectory(destDirectory);
 
-                // TODO: If we are doing signature validation, dont extract zip to directory. Do this later.
-                // TODO: make this a shared string
-                String tasksZipDirectory = HostContext.GetDirectory(WellKnownDirectory.TaskZips);
-
-                // I think we need this, should move to where we create folders
-                if (!Directory.Exists(tasksZipDirectory))
-                {
-                    Directory.CreateDirectory(tasksZipDirectory);
-                }
-                
+                // Only extract the zip if we are not doing signature verification.
+                // If we are doing signature verification, we will extract the zip at task run time.
                 if (signingEnabled)
                 {
+                    Directory.CreateDirectory(HostContext.GetDirectory(WellKnownDirectory.TaskZips));
+
                     // Copy downloaded zip to the cache on disk for future extraction.
                     executionContext.Debug($"Copying from {zipFile} to {taskZipPath}");
                     File.Copy(zipFile, taskZipPath);
                 }
+                else 
+                {
+                    ZipFile.ExtractToDirectory(zipFile, destDirectory);
+                }
 
-                ZipFile.ExtractToDirectory(zipFile, destDirectory);
-
+                // TODO: Combine some lines below with if/else above. Including creating the dest directory?
                 Trace.Verbose("Create watermark file indicate task download succeed.");
                 File.WriteAllText(destDirectory + ".completed", DateTime.UtcNow.ToString());
 
