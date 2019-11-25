@@ -338,10 +338,8 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests.Worker
         {
             try
             {
-                // TODO: Setup that the fingerprint exists.
-
                 //Arrange
-                Setup();
+                Setup(signatureVerificationEnabled: true);
                 var bingGuid = Guid.NewGuid();
                 string bingTaskName = "Bing";
                 string bingVersion = "1.21.2";
@@ -704,7 +702,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests.Worker
             return new FileStream(zipFile, FileMode.Open);
         }
 
-        private void Setup([CallerMemberName] string name = "")
+        private void Setup([CallerMemberName] string name = "", bool signatureVerificationEnabled = false)
         {
             _ecTokenSource?.Dispose();
             _ecTokenSource = new CancellationTokenSource();
@@ -724,12 +722,19 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests.Worker
             _hc.SetSingleton<IJobServer>(_jobServer.Object);
             _hc.SetSingleton<ITaskServer>(_taskServer.Object);
 
+            String fingerprint = String.Empty;
+            if (signatureVerificationEnabled)
+            {
+                fingerprint = "FAKEFINGERPRINT";
+            }
+
             _configurationStore = new Mock<IConfigurationStore>();
             _configurationStore
                 .Setup(x => x.GetSettings())
                 .Returns(
                     new AgentSettings
                     {
+                        Fingerprint = fingerprint,
                         WorkFolder = _workFolder
                     });
             _hc.SetSingleton<IConfigurationStore>(_configurationStore.Object);
