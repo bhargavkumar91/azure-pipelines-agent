@@ -414,7 +414,16 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests.Worker
                 var bingGuid = Guid.NewGuid();
                 string bingTaskName = "Bing";
                 string bingVersion = "1.21.2";
-                var taskStep = new Pipelines.TaskStep();
+                var taskStep = new Pipelines.TaskStep
+                {
+                    Name = bingTaskName,
+                    Reference = new Pipelines.TaskStepDefinitionReference
+                    {
+                        Id = bingGuid,
+                        Name = bingTaskName,
+                        Version = bingVersion
+                    }
+                };
                 string zipDestDirectory = Path.Combine(_hc.GetDirectory(WellKnownDirectory.TaskZips), $"{bingTaskName}_{bingGuid}_{bingVersion}.zip");
                 Directory.CreateDirectory(_hc.GetDirectory(WellKnownDirectory.TaskZips));
                 // write stream to file
