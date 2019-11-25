@@ -155,29 +155,23 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
             Definition definition = taskManager.Load(Task);
             ArgUtil.NotNull(definition, nameof(definition));
 
-            // Verify task signatures
-            Boolean shouldVerifyTaskSignatures = true;
-            Boolean verificationSuccessful = false;
-            if (shouldVerifyTaskSignatures)
+            // Verify task signatures if a fingerprint is configured for the Agent.
+            var configurationStore = HostContext.GetService<IConfigurationStore>();
+            AgentSettings settings = configurationStore.GetSettings();
+            
+            if (!String.IsNullOrEmpty(settings.Fingerprint))
             {
-                ExecutionContext.Output(definition.Directory);
-                ExecutionContext.Output(definition.ZipPath);
-
-                ExecutionContext.Output(Newtonsoft.Json.JsonConvert.SerializeObject(definition));
-
                 ISignatureService signatureService = HostContext.CreateService<ISignatureService>();
-                verificationSuccessful =  await signatureService.VerifyAsync(definition);
-            }
+                Boolean verificationSuccessful =  await signatureService.VerifyAsync(definition);
 
-            if (verificationSuccessful) 
-            {
-                ExecutionContext.Output("Task signature verification successful.");
-            }
-            else 
-            {
-                //ExecutionContext.Output("Task signature verification failed.");
-                //throw new Exception(StringUtil.Loc("SupportedTaskHandlerNotFoundLinux"));
-                throw new Exception("Task signature verification failed.");
+                if (verificationSuccessful) 
+                {
+                    ExecutionContext.Output("Task signature verification successful.");
+                }
+                else 
+                {
+                    throw new Exception("Task signature verification failed.");
+                }
             }
 
             // Print out task metadata
