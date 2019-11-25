@@ -25,7 +25,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
     {
         public async Task<Boolean> VerifyAsync(Definition definition)
         {
-            // TODO: I think its empty for checkout. Solve this in another way. Din't call verify for checkout? Check data shape before calling this.
+            // TODO: I think its empty for checkout. Solve this in another way. Don't call verify for checkout? Check data shape before calling this.
             if (String.IsNullOrEmpty(definition.ZipPath))
             {
                 return true;
@@ -36,12 +36,8 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
 
             var configurationStore = HostContext.GetService<IConfigurationStore>();
             AgentSettings settings = configurationStore.GetSettings();
-            String fingerprint = settings.Fingerprints; // TODO: In other places check if this exists and that tells us if we need to verify or not.
+            String fingerprint = settings.Fingerprint;
 
-            //String fingerprint = "2389B9BF6F1FC00A963465F022A15887D44AA8CD0E2C2B49E039122CBA3B5EA4"; // TODO: Load from Agent config. Add global check if it exists
-
-
-            // Which means we should verify signatures.
             String taskZipPath = definition.ZipPath;
             String taskNugetPath = definition.ZipPath.Replace(".zip", ".nupkg");
 
@@ -51,26 +47,11 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
             // TODO: If verify successful, we will have to extract. Make sure to first delete destination folder.
 
             String arguments = $"verify -Signatures \"{taskNugetPath}\" -CertificateFingerprint {fingerprint} -Verbosity Detailed";
-            String workingDirectory = "C:\\";
-            
-            
-            // // Zip the task
-            // String taskDirectory = definition.Directory;
-            // String tempDirectory = Path.Combine(HostContext.GetDirectory(WellKnownDirectory.Temp), Guid.NewGuid().ToString());
-
-            // // Zip the task
-            // String taskZipPath = Path.Combine(tempDirectory, "task.zip");
-            // ZipFile.CreateFromDirectory(definition.Directory, taskZipPath);
-
-            // // Convert to nupkg
-            // String nupkgPath = Path.Combine(tempDirectory, "task.nupkg");
-            // File.Move(taskZipPath, nupkgPath);
+            String workingDirectory = "C:\\"; // TODO: Set this to agent root path?
 
             // Run nuget verify
             using (var processInvoker = HostContext.CreateService<IProcessInvoker>())
             {
-                // TODO: What if there are multiple signatures? E.g. - 1 or more registered from the user and 1 or more from the Agent.
-
                 int exitCode = await processInvoker.ExecuteAsync(workingDirectory: workingDirectory,
                                                                  fileName: nugetPath,
                                                                  arguments: arguments,
@@ -78,21 +59,16 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                                                                  requireExitCodeZero: false,
                                                                  outputEncoding: null,
                                                                  killProcessOnCancel: false,
-                                                                 cancellationToken: default(CancellationToken)); // TODO: Is it OK to set to null?
+                                                                 cancellationToken: default(CancellationToken));
 
                 if (exitCode != 0)
                 {
+                    // Rename back to zip
                     File.Move(taskNugetPath, taskZipPath);
-                    // TODO: Log something
+
                     return false;
                 }
             }
-
-            //Directory.Delete(tempDirectory);
-            // TODO: Log that we successfully verified the task
-            // TODO: Add logging
-            // TODO: Need to save zips and not extract on initial download
-
 
             // Rename .nupkg back to .zip
             File.Move(taskNugetPath, taskZipPath);
