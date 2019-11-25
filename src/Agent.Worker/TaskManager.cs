@@ -163,8 +163,14 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
 
                 // We need to extract the zip now because the task.json metadata for the task is used in JobExtension.InitializeJob.
                 // This is fine because we overwrite the contents at task run time.
-                IOUtil.DeleteDirectory(destDirectory, CancellationToken.None);
-                ZipFile.ExtractToDirectory(taskZipPath, destDirectory);
+                if (!File.Exists(destDirectory + ".completed"))
+                {
+                    // The zip exists but it hasn't been extracted yet.
+                    IOUtil.DeleteDirectory(destDirectory, CancellationToken.None);
+                    ZipFile.ExtractToDirectory(taskZipPath, destDirectory);
+                    Trace.Verbose("Create watermark file indicate task download succeed.");
+                    File.WriteAllText(destDirectory + ".completed", DateTime.UtcNow.ToString());
+                }
 
                 return;
             }
@@ -248,8 +254,6 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                     }
                 }
 
-                // Only extract the zip if we are not doing signature verification.
-                // If we are doing signature verification, we will extract the zip at task run time.
                 if (signingEnabled)
                 {
                     Directory.CreateDirectory(HostContext.GetDirectory(WellKnownDirectory.TaskZips));
@@ -257,19 +261,14 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                     // Copy downloaded zip to the cache on disk for future extraction.
                     executionContext.Debug($"Copying from {zipFile} to {taskZipPath}");
                     File.Copy(zipFile, taskZipPath);
+                }
 
-                    // We need to extract the zip now because the task.json metadata for the task is used in JobExtension.InitializeJob.
-                    // This is fine because we overwrite the contents at task run time.
-                    IOUtil.DeleteDirectory(destDirectory, CancellationToken.None);
-                    ZipFile.ExtractToDirectory(zipFile, destDirectory);
-                }
-                else 
-                {
-                    Directory.CreateDirectory(destDirectory);
-                    ZipFile.ExtractToDirectory(zipFile, destDirectory);
-                    Trace.Verbose("Create watermark file indicate task download succeed.");
-                    File.WriteAllText(destDirectory + ".completed", DateTime.UtcNow.ToString());
-                }
+                // We need to extract the zip regardless of whether ot not signing is enabled because the task.json metadata for the task is used in JobExtension.InitializeJob.
+                // This is fine because we overwrite the contents at task run time.
+                Directory.CreateDirectory(destDirectory);
+                ZipFile.ExtractToDirectory(zipFile, destDirectory);
+                Trace.Verbose("Create watermark file indicate task download succeed.");
+                File.WriteAllText(destDirectory + ".completed", DateTime.UtcNow.ToString());
 
                 executionContext.Debug($"Task '{task.Name}' has been downloaded into '{(signingEnabled ? taskZipPath : destDirectory)}'.");
                 Trace.Info("Finished getting task.");
